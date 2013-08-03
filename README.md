@@ -4,7 +4,7 @@ OCFWebServer is a lightweight, modern and asynchronous HTTP (version 1.1) server
 # Who is using OCFWebServer?
 OCFWebServer is used by OCFWeb which is a framework for developing web applications with Objective-C. OCFWeb and OCFWebServer are both used by [Objective-Cloud.com](http://objective-cloud.com). Are you using OCFWebServer as well? [Let us know](mailto:team@objective-cloud.com) and we will link your app/project right here.
 
-# Golas
+# Goals
 OCFWebServer was developed to be used for Objective-Cloud.com. This does not mean that the goals we had while developing it are incompatible with the needs of developers of `regular` apps. These are the goals we had in mind while working on OCFWebServer:
 
 * Easy to use in your own application: Embedding OCFWebServer should be done with just a few lines of code.
