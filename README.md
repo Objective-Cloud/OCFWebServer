@@ -83,7 +83,7 @@ Here we go:
                          </form> \
                          </body></html>";
                          
-      respondWith[OCFWebServerDataResponse responseWithHTML:html]);
+      respondWith([OCFWebServerDataResponse responseWithHTML:html]);
     }];
 
     [server addHandlerForMethod:@"POST"
