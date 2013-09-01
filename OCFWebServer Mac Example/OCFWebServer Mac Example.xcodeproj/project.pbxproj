@@ -63,7 +63,9 @@
 				AB4D0C9517AD5B52008CCA21 /* Frameworks */,
 				AB4D0C9417AD5B52008CCA21 /* Products */,
 			);
+			indentWidth = 2;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		AB4D0C9417AD5B52008CCA21 /* Products */ = {
 			isa = PBXGroup;

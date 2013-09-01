@@ -106,7 +106,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
       // FIXME: Check RFC. This does not seem to be correct.
       //        As far I know it is okay for requests to not
       //        have a content length header value at all.
-      self.contentLength = 0; 
+      self.contentLength = 0;
     } else {
       // FIXME: Validate contents of contentLengthString: A malformed content length value
       //        may have bad side effects.
@@ -365,6 +365,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 @property (nonatomic, copy) NSString *fileName;
 @property (nonatomic, copy) NSString *tmpPath;
 @property (nonatomic, assign) int tmpFile;
+@property (nonatomic, copy, readwrite) NSData *data;
 
 @end
 
@@ -372,6 +373,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   NSMutableDictionary *_arguments;
   NSMutableDictionary *_files;
   NSMutableData *_parserData;
+  NSMutableData* _data;
 }
 
 #pragma mark - Properties
@@ -399,6 +401,14 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return [_parserData copy];
 }
 
+- (NSData *)data {
+  return [_data copy];
+}
+
+- (void)setData:(NSData *)data {
+  _data = [data mutableCopy];
+}
+
 #pragma mark - Creating
 - (instancetype)initWithMethod:(NSString*)method URL:(NSURL*)URL headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if((self = [super initWithMethod:method URL:URL headers:headers path:path query:query])) {
@@ -417,8 +427,20 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return self;
 }
 
+- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
+  DCHECK(_parserData != nil);
+  [_parserData appendBytes:buffer length:length];
+  
+  DCHECK(_data != nil);
+  [_data appendBytes:buffer length:length];
+  return ([self _parseData] ? length : -1);
+}
+
 - (BOOL)open {
   DCHECK(self.parserData == nil);
+  DCHECK(self.data == nil);
+  self.data = [NSMutableData dataWithCapacity:self.contentLength];
+  
   self.parserData = [[NSMutableData alloc] initWithCapacity:kMultiPartBufferSize];
   self.parserState = OCFWebServerParserStateStart;
   return YES;
@@ -532,12 +554,6 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
     }
   }
   return success;
-}
-
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
-  DCHECK(_parserData != nil);
-  [_parserData appendBytes:buffer length:length];
-  return ([self _parseData] ? length : -1);
 }
 
 - (BOOL)close {
