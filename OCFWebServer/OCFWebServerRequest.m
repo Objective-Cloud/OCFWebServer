@@ -34,6 +34,7 @@
  */
 
 #import "OCFWebServerPrivate.h"
+#import "OCFWebServerRequest.h"
 
 #define kMultiPartBufferSize (256 * 1024)
 
@@ -127,6 +128,11 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 - (BOOL)hasBody {
   return (self.contentType != nil ? YES : NO);
+}
+
+#pragma mark - Responding
+- (void)respondWith:(OCFWebServerResponse *)response {
+  self.responseBlock ? self.responseBlock(response) : nil;
 }
 
 @end

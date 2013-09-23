@@ -34,6 +34,9 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCFWebServerRequest_Types.h"
+
+@class OCFWebServerResponse;
 
 @interface OCFWebServerRequest : NSObject
 
@@ -49,6 +52,10 @@
 #pragma mark - Creating
 - (instancetype)initWithMethod:(NSString *)method URL:(NSURL *)url headers:(NSDictionary *)headers path:(NSString *)path query:(NSDictionary *)query;
 - (BOOL)hasBody;  // Convenience method
+
+#pragma mark - Responding
+- (void)respondWith:(OCFWebServerResponse *)response;
+@property (nonatomic, copy) OCFWebServerResponseBlock responseBlock;
 
 @end
 

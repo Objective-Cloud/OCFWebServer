@@ -36,6 +36,7 @@
 #import <sys/stat.h>
 
 #import "OCFWebServerPrivate.h"
+#import "OCFWebServerResponse.h"
 
 
 @interface OCFWebServerResponse ()

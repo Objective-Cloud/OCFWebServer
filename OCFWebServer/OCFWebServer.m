@@ -41,6 +41,8 @@
 #import <netinet/in.h>
 
 #import "OCFWebServerPrivate.h"
+#import "OCFWebServerRequest.h"
+#import "OCFWebServerResponse.h"
 
 static BOOL _run;
 
@@ -174,7 +176,7 @@ static void _SignalHandler(int signal) {
 #pragma mark - OCFWebServer
 - (void)addHandlerWithMatchBlock:(OCFWebServerMatchBlock)matchBlock processBlock:(OCFWebServerProcessBlock)handlerBlock {
   DCHECK(self.source == NULL);
-  OCFWebServerHandler* handler = [[OCFWebServerHandler alloc] initWithMatchBlock:matchBlock processBlock:handlerBlock];
+  OCFWebServerHandler *handler = [[OCFWebServerHandler alloc] initWithMatchBlock:matchBlock processBlock:handlerBlock];
   [_handlers insertObject:handler atIndex:0];
 }
 
@@ -419,8 +421,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       }
       return [[OCFWebServerRequest alloc] initWithMethod:requestMethod URL:requestURL headers:requestHeaders path:urlPath query:urlQuery];
       
-    } processBlock:^(OCFWebServerRequest* request, OCFWebServerResponseBlock responseBlock) {
-      
+    } processBlock:^(OCFWebServerRequest* request) {
       OCFWebServerResponse* response = nil;
       NSString* filePath = [localPath stringByAppendingPathComponent:[request.path substringFromIndex:basePath.length]];
       BOOL isDirectory;
@@ -429,7 +430,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
           if (indexFilename) {
             NSString* indexPath = [filePath stringByAppendingPathComponent:indexFilename];
             if ([[NSFileManager defaultManager] fileExistsAtPath:indexPath isDirectory:&isDirectory] && !isDirectory) {
-              responseBlock( [weakSelf _responseWithContentsOfFile:indexPath]);
+              response = [weakSelf _responseWithContentsOfFile:indexPath];
             }
           }
           response = [weakSelf _responseWithContentsOfDirectory:filePath];
@@ -442,8 +443,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       } else {
         response = [OCFWebServerResponse responseWithStatusCode:404];
       }
-      responseBlock(response);
-      
+      [request respondWith:response];
     }];
   } else {
     DNOT_REACHED();

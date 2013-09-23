@@ -33,12 +33,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#import "OCFWebServerRequest.h"
-#import "OCFWebServerResponse.h"
+#import "OCFWebServerRequest_Types.h"
+
+@class OCFWebServerRequest;
 
 typedef OCFWebServerRequest*(^OCFWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
-typedef void(^OCFWebServerResponseBlock)(OCFWebServerResponse *response);
-typedef void(^OCFWebServerProcessBlock)(OCFWebServerRequest* request, OCFWebServerResponseBlock responseBlock);
+typedef void(^OCFWebServerProcessBlock)(OCFWebServerRequest* request);
 
 @interface OCFWebServer : NSObject
 

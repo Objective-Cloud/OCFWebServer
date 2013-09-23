@@ -9,6 +9,8 @@
 #import "OBCAppDelegate.h"
 
 #import "OCFWebServer.h"
+#import "OCFWebServerRequest.h"
+#import "OCFWebServerResponse.h"
 
 @interface OBCAppDelegate ()
 @property (nonatomic, strong) OCFWebServer *server;
@@ -24,10 +26,10 @@
   
   [self.server addDefaultHandlerForMethod:@"GET"
                              requestClass:[OCFWebServerRequest class]
-                             processBlock:^void(OCFWebServerRequest *request,
-                                                OCFWebServerResponseBlock respondWith) {
+                             processBlock:^(OCFWebServerRequest *request) {
                                // Create your response and pass it to respondWith(...)
-                               respondWith([OCFWebServerDataResponse responseWithHTML:@"Hello World"]);
+                               OCFWebServerResponse *response = [OCFWebServerDataResponse responseWithHTML:@"Hello World"];
+                               [request respondWith:response];
                              }];
   
   // Run the server on port 8080

@@ -34,6 +34,8 @@
  */
 
 #import "OCFWebServerPrivate.h"
+#import "OCFWebServerRequest.h"
+#import "OCFWebServerResponse.h"
 
 #define kHeadersReadBuffer 1024
 #define kBodyWriteBufferSize (32 * 1024)
@@ -308,43 +310,45 @@ static dispatch_queue_t _formatterQueue = NULL;
 - (void)_processRequest {
   DCHECK(self.responseMessage == NULL);
   @try {
-    self.handler.processBlock(self.request, ^(OCFWebServerResponse *response) {
+    __typeof__(self) __weak weakSelf = self;
+    self.request.responseBlock = ^(OCFWebServerResponse *response) {
       if (![response hasBody] || [response open]) {
-        self.response = response;
+        weakSelf.response = response;
       }
-      if (self.response) {
-        [self _initializeResponseHeadersWithStatusCode:_response.statusCode];
-        NSUInteger maxAge = _response.cacheControlMaxAge;
+      if (weakSelf.response) {
+        [weakSelf _initializeResponseHeadersWithStatusCode:weakSelf.response.statusCode];
+        NSUInteger maxAge = weakSelf.response.cacheControlMaxAge;
         if (maxAge > 0) {
-          CFHTTPMessageSetHeaderFieldValue(self.responseMessage, CFSTR("Cache-Control"), (__bridge CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)maxAge]);
+          CFHTTPMessageSetHeaderFieldValue(weakSelf.responseMessage, CFSTR("Cache-Control"), (__bridge CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)maxAge]);
         } else {
-          CFHTTPMessageSetHeaderFieldValue(self.responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
+          CFHTTPMessageSetHeaderFieldValue(weakSelf.responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
         }
-        [self.response.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *obj, BOOL* stop) {
-          CFHTTPMessageSetHeaderFieldValue(self.responseMessage, (__bridge CFStringRef)(key), (__bridge CFStringRef)(obj));
+        [weakSelf.response.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *obj, BOOL* stop) {
+          CFHTTPMessageSetHeaderFieldValue(weakSelf.responseMessage, (__bridge CFStringRef)(key), (__bridge CFStringRef)(obj));
         }];
         
-        if ([self.response hasBody]) {
-          CFHTTPMessageSetHeaderFieldValue(self.responseMessage, CFSTR("Content-Type"), (__bridge CFStringRef)self.response.contentType);
-          CFHTTPMessageSetHeaderFieldValue(self.responseMessage, CFSTR("Content-Length"), (__bridge CFStringRef)[NSString stringWithFormat:@"%i", (int)self.response.contentLength]);
+        if ([weakSelf.response hasBody]) {
+          CFHTTPMessageSetHeaderFieldValue(weakSelf.responseMessage, CFSTR("Content-Type"), (__bridge CFStringRef)weakSelf.response.contentType);
+          CFHTTPMessageSetHeaderFieldValue(weakSelf.responseMessage, CFSTR("Content-Length"), (__bridge CFStringRef)[NSString stringWithFormat:@"%i", (int)weakSelf.response.contentLength]);
         }
-        [self _writeHeadersWithCompletionBlock:^(BOOL success) {
+        [weakSelf _writeHeadersWithCompletionBlock:^(BOOL success) {
           if (success) {
-            if ([self.response hasBody]) {
-              [self _writeBodyWithCompletionBlock:^(BOOL success) {
-                [self.response close];  // Can't do anything with result anyway
-                [self close];
+            if ([weakSelf.response hasBody]) {
+              [weakSelf _writeBodyWithCompletionBlock:^(BOOL success) {
+                [weakSelf.response close];  // Can't do anything with result anyway
+                [weakSelf close];
               }];
             }
-          } else if ([self.response hasBody]) {
-            [self.response close];  // Can't do anything with result anyway
-            [self close];
+          } else if ([weakSelf.response hasBody]) {
+            [weakSelf.response close];  // Can't do anything with result anyway
+            [weakSelf close];
           }
         }];
       } else {
-        [self _abortWithStatusCode:500];
+        [weakSelf _abortWithStatusCode:500];
       }
-    });
+    };
+    self.handler.processBlock(self.request);
   }
   @catch (NSException* exception) {
     LOG_EXCEPTION(exception);
