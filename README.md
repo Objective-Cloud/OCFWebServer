@@ -31,8 +31,7 @@ Setting up OCFWebServer is easy:
         
         [server addDefaultHandlerForMethod:@"GET"
                               requestClass:[OCFWebServerRequest class]
-                              processBlock:^void(OCFWebServerRequest *request, 
-                                                 OCFWebServerResponseBlock respondWith) {
+                              processBlock:^void(OCFWebServerRequest *request) {
                                          
           // Create your response and pass it to respondWith(...) 
           OCFWebServerResponse *response = [OCFWebServerDataResponse responseWithHTML:@"Hello World"];
