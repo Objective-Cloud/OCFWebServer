@@ -35,8 +35,8 @@ Setting up OCFWebServer is easy:
                                                  OCFWebServerResponseBlock respondWith) {
                                          
           // Create your response and pass it to respondWith(...) 
-          respondWith([OCFWebServerDataResponse responseWithHTML:@"Hello World"]);
-          
+          OCFWebServerResponse *response = [OCFWebServerDataResponse responseWithHTML:@"Hello World"];
+          [request respondWith:response];
         }];
         
         // Run the server on port 8080
@@ -53,8 +53,7 @@ Here's an example handler that redirects `/` to `/index.html` using the convenie
     [self addHandlerForMethod:@"GET"
                          path:@"/"
                  requestClass:[OCFWebServerRequest class]
-             processBlock:^void(OCFWebServerRequest* request, 
-                                OCFWebServerResponseBlock respondWith) {
+             processBlock:^void(OCFWebServerRequest* request) {
       NSURL *toURL = [NSURL URLWithString:@"index.html" relativeToURL:request.URL];
       
       respondWith([OCFWebServerResponse responseWithRedirect:toURL
@@ -72,8 +71,7 @@ Here we go:
     [server addHandlerForMethod:@"GET"
                            path:@"/"
                    requestClass:[OCFWebServerRequest class]
-                   processBlock:^void(OCFWebServerRequest* request, 
-                                      OCFWebServerResponseBlock respondWith) {
+                   processBlock:^void(OCFWebServerRequest* request) {
   
       NSString* html = @"<html><body> \
                          <form name=\"input\" action=\"/\" \
@@ -83,19 +81,18 @@ Here we go:
                          </form> \
                          </body></html>";
                          
-      respondWith([OCFWebServerDataResponse responseWithHTML:html]);
+      [request respondWith:[OCFWebServerDataResponse responseWithHTML:html]];
     }];
 
     [server addHandlerForMethod:@"POST"
                            path:@"/"
                    requestClass:[OCFWebServerURLEncodedFormRequest class]
-                   processBlock:^void(OCFWebServerRequest* request, 
-                                      OCFWebServerResponseBlock respondWith) {
+                   processBlock:^void(OCFWebServerRequest* request) {
   
       NSString *value = [(OCFWebServerURLEncodedFormRequest*)request arguments][@"value"];
       NSString* html = [NSString stringWithFormat:@"<p>%@</p>", value];
       
-      respondWith([OCFWebServerDataResponse responseWithHTML:html]);
+      [request respondWith:[OCFWebServerDataResponse responseWithHTML:html]];
     }];
 
 # Handlers
@@ -117,19 +114,21 @@ If you want to learn more about the architecture of OCFWebServer you can have a 
 
 ## Asynchronous: Front to Back
 
-In OCFWebServer your request handler does not have to return anything immediately. OCFWebServer will pass the request and a block to your request handler. You call the passed block as soon you have created the response object and pass the block your response object. This can be done synchronously or asynchronously. Here is an example:
+In OCFWebServer your request handler does not have to return anything immediately. OCFWebServer will pass the request to your request handler. The request gives you access to a lot of HTTP request specific properties. Now it is your turn to compute a response. Once that is done you should let the request object know about your response by calling `-respondWith:` (class: OCFRequest) and pass it the response.  Here is an example:
 
     [server addDefaultHandlerForMethod:@"GET"
                       requestClass:[OCFWebServerRequest class]
-                      processBlock:^void(OCFWebServerRequest *request, 
-                                         OCFWebServerResponseBlock respondWith) {
+                      processBlock:^void(OCFWebServerRequest *request) {
       dispatch_async(myQueue, ^() {
           OCFWebServerDataResponse *response = [OCFWebServerDataResponse responseWithHTML:@"Hello World"];
-          respondWith(response);
+          [request respondWith:response];
       });
     }];  
 
-As you can see your request handler does not only get a request but also a response block `respondWith` that you can execute at any time. The `dispatch_async` is not needed. It is only there to show you how it would look like if you had to create the response in the background. In fact: Migrating your GCDWebServer related code to OCFWebServer is very easy: Simply replace `return response;` with `respondWith(response); return` and you are done.
+As you can see your request handler can do anything it wants. You do not have to call `dispatch_async` but you can if you need to. Some APIs require you to do something asynchronously (NSURLConnection, XPC, …). 
+
+
+By the way: Migrating your GCDWebServer related code to OCFWebServer is very easy: Simply replace `return response;` with `[request respondWith:response], return;` and you are done.
 
 ## Many concurrent requests
 At the time of writing GCDWebServer can only handle 16 concurrent requests. You can increase that by changing a constant in GCDWebServer's source code but in OCFWebServer the default maximum number of concurrent request is automatically set to the maximum of what is possible. If you are running OS X and not fine tune the settings this will mean that OCFWebServer can handle up to 128 concurrent requests at a time. If you tune the settings of OS X then this value can be increased and we are already working on a better queuing system which should further increase the number of concurrent requests.
