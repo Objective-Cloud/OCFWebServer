@@ -76,7 +76,8 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 - (void)_readBufferWithLength:(NSUInteger)length completionBlock:(ReadBufferCompletionBlock)block {
   dispatch_read(self.socket, length, kOCFWebServerGCDQueue, ^(dispatch_data_t buffer, int error) {
-    @autoreleasepool {
+    @autoreleasepool
+	  {
       if (error == 0) {
         size_t size = dispatch_data_get_size(buffer);
         if (size > 0) {
@@ -409,6 +410,9 @@ static dispatch_queue_t _formatterQueue = NULL;
       NSURL* requestURL = (id)CFBridgingRelease(CFHTTPMessageCopyRequestURL(self.requestMessage));
       DCHECK(requestURL);
       NSString* requestPath = OCFWebServerUnescapeURLString((id)CFBridgingRelease(CFURLCopyPath((CFURLRef)requestURL)));  // Don't use -[NSURL path] which strips the ending slash
+      if(requestPath == nil) {
+        requestPath = @"/";
+      }
       DCHECK(requestPath);
       NSDictionary* requestQuery = nil;
       NSString* queryString = (id)CFBridgingRelease(CFURLCopyQueryString((CFURLRef)requestURL, NULL));  // Don't use -[NSURL query] to make sure query is not unescaped;

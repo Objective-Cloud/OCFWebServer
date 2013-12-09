@@ -162,8 +162,24 @@ static void _SignalHandler(int signal) {
   if(self) {
     self.handlers = @[];
     self.connections = [NSMutableArray new];
+    [self setupHeaderLogging];
   }
   return self;
+}
+
+- (void)setupHeaderLogging {
+  NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+  NSDictionary *environment = processInfo.environment;
+  NSString *headerLoggingEnabledString = environment[@"OCFWS_HEADER_LOGGING_ENABLED"];
+  if(headerLoggingEnabledString == nil) {
+    self.headerLoggingEnabled = NO;
+    return;
+  }
+  if([headerLoggingEnabledString.uppercaseString isEqualToString:@"YES"]) {
+    self.headerLoggingEnabled = YES;
+    return;
+  }
+  self.headerLoggingEnabled = NO;
 }
 
 #pragma mark - NSObject

@@ -106,9 +106,11 @@ NSDictionary* OCFWebServerParseURLEncodedForm(NSString* form);
 @end
 
 @interface OCFWebServer ()
+
 #pragma mark - Properties
 @property (nonatomic, copy, readonly) NSArray* handlers;
 @property (nonatomic, assign, readwrite) NSUInteger maxPendingConnections;
+@property (assign, readwrite, setter = setHeaderLoggingEnabled:) BOOL headerLoggingEnabled;
 
 @end
 

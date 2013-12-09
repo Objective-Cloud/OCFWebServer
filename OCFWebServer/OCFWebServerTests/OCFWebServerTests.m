@@ -2,8 +2,8 @@
 //  OCFWebServerTests.m
 //  OCFWebServerTests
 //
-//  Created by cmk on 9/23/13.
-//  Copyright (c) 2013 Objective-Cloud. All rights reserved.
+//  Created by cmk on 12/9/13.
+//  Copyright (c) 2013 Objective-Cloud.com. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
