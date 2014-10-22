@@ -333,15 +333,17 @@ static dispatch_queue_t _formatterQueue = NULL;
           CFHTTPMessageSetHeaderFieldValue(weakSelf.responseMessage, CFSTR("Content-Length"), (__bridge CFStringRef)[NSString stringWithFormat:@"%i", (int)weakSelf.response.contentLength]);
         }
         [weakSelf _writeHeadersWithCompletionBlock:^(BOOL success) {
-          if (success) {
-            if ([weakSelf.response hasBody]) {
-              [weakSelf _writeBodyWithCompletionBlock:^(BOOL success) {
-                [weakSelf.response close];  // Can't do anything with result anyway
-                [weakSelf close];
-              }];
+          WriteBodyCompletionBlock closeResponse = ^(BOOL _){
+            [weakSelf.response close];
+            [weakSelf close];
+          };
+          if ([weakSelf.response hasBody]) {
+            if (success) {
+              [weakSelf _writeBodyWithCompletionBlock:closeResponse];
+            } else {
+              closeResponse(NO);
             }
-          } else if ([weakSelf.response hasBody]) {
-            [weakSelf.response close];  // Can't do anything with result anyway
+          } else {
             [weakSelf close];
           }
         }];
